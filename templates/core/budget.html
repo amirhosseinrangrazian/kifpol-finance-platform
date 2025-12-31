@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load persian_tags %}
+
+{% block title %}مدیریت بودجه - کیف‌پول{% endblock %}
+
+{% block content %}
+<div class="budget-page animate-fade-in">
+    <!-- Header Card -->
+    <div class="card bg-primary text-white mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-1">مدیریت بودجه و اهداف</h5>
+                <p class="small opacity-75 mb-0">سقف هزینه‌ها و اهداف مالی خود را تعیین کنید</p>
+            </div>
+            <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+                <i class="bi bi-plus-lg me-1"></i>
+                <span class="d-none d-md-inline">هدف جدید</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Budget Cards -->
+    <div class="row g-3">
+        {% for item in budget_data %}
+        <div class="col-12 col-md-6">
+            <div
+                class="card {% if item.over_budget %}border-danger{% elif item.near_budget %}border-warning{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold">{{ item.category.name_fa|default:item.category.name }}</span>
+                            {% if item.over_budget %}
+                            <span class="badge bg-danger-subtle text-danger small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>بودجه تمام شد
+                            </span>
+                            {% elif item.near_budget %}
+                            <span class="badge bg-warning-subtle text-warning small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>هشدار مصرف
+                            </span>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="modal"
+                            data-bs-target="#editBudgetModal{{ item.category.id }}">
+                            {% if item.budget %}
+                            <i class="bi bi-pencil"></i>
+                            {% else %}
+                            <i class="bi bi-plus-lg"></i>
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    {% if item.budget %}
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <div>
+                            <small class="text-muted">مصرف شده</small>
+                            <div class="fw-bold fs-5 {% if item.over_budget %}text-danger{% endif %}">
+                                {{ item.spent|format_amount }}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">سقف بودجه</small>
+                            <div class="fw-bold text-muted">
+                                {{ item.limit|format_amount }} <small>تومان</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress" style="height: 12px; border-radius: 6px;">
+                        <div class="progress-bar {% if item.over_budget %}bg-danger{% elif item.near_budget %}bg-warning{% else %}bg-primary{% endif %}"
+                            style="width: {{item.percent}}%;">
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">بودجه‌ای تعریف نشده است.</span>
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                            data-bs-target="#editBudgetModal{{ item.category.id }}">
+                            تعریف بودجه
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Budget Modal for each category -->
+        <div class="modal fade" id="editBudgetModal{{ item.category.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">تعریف بودجه - {{
+                            item.category.name_fa|default:item.category.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post" action="{% url 'save_budget' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="category_id" value="{{ item.category.id }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small">سقف بودجه (تومان)</label>
+                                <input type="number" class="form-control" name="limit" value="{{ item.limit }}" required
+                                    placeholder="5000000">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">
+                                <i class="bi bi-check-lg me-1"></i>
+                                ذخیره
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add New Budget Modal -->
+<div class="modal fade" id="addBudgetModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-bullseye me-2 text-primary"></i>
+                    افزودن هدف / دسته‌بندی جدید
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'save_budget' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small">انتخاب دسته‌بندی</label>
+                        <select class="form-select" name="category_id" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name_fa|default:cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">مبلغ بودجه (تومان)</label>
+                        <input type="number" class="form-control" name="limit" required placeholder="5000000">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">افزودن</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

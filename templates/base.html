@@ -1,0 +1,165 @@
+{% load static %}
+{% load persian_tags %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}کیف‌پول{% endblock %}</title>
+
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <!-- Custom CSS -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    <!-- Persian Datepicker -->
+    <link rel="stylesheet" href="https://unpkg.com/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js"></script>
+    <script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+
+<body
+    class="theme-{% if user.is_authenticated and user.userprofile %}{{ user.userprofile.theme }}{% else %}olive{% endif %}">
+
+    {% if user.is_authenticated %}
+    <!-- Main Container -->
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="logo-box">
+                    <span>K</span>
+                </div>
+                <span class="app-title">کیف‌پول</span>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="desktop-nav d-none d-md-flex">
+                <a href="{% url 'dashboard' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-house"></i>
+                    <span>خانه</span>
+                </a>
+                <a href="{% url 'analytics' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                    <i class="bi bi-pie-chart"></i>
+                    <span>گزارش</span>
+                </a>
+                <a href="{% url 'budget' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'budget' %}active{% endif %}">
+                    <i class="bi bi-bullseye"></i>
+                    <span>بودجه</span>
+                </a>
+                <a href="{% url 'goals' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'goals' %}active{% endif %}">
+                    <i class="bi bi-trophy"></i>
+                    <span>اهداف</span>
+                </a>
+                <a href="{% url 'transactions' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'transactions' %}active{% endif %}">
+                    <i class="bi bi-list-ul"></i>
+                    <span>تراکنش‌ها</span>
+                </a>
+                <a href="{% url 'advisor' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'advisor' %}active{% endif %}">
+                    <i class="bi bi-robot"></i>
+                    <span>مشاور</span>
+                </a>
+                <a href="{% url 'profile' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="bi bi-person"></i>
+                    <span>پروفایل</span>
+                </a>
+                <a href="{% url 'categories' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'categories' %}active{% endif %}">
+                    <i class="bi bi-tags"></i>
+                    <span>دسته‌بندی‌ها</span>
+                </a>
+            </nav>
+
+            <!-- User Avatar -->
+            <a href="{% url 'profile' %}" class="user-avatar">
+                {% if user.userprofile.avatar %}
+                <img src="{{ user.userprofile.avatar.url }}" alt="Avatar">
+                {% else %}
+                <i class="bi bi-person-fill"></i>
+                {% endif %}
+            </a>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <div class="container-fluid">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-nav d-md-none">
+            <a href="{% url 'dashboard' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-house"></i>
+                <span>خانه</span>
+            </a>
+            <a href="{% url 'analytics' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                <i class="bi bi-pie-chart"></i>
+                <span>گزارش</span>
+            </a>
+            <a href="{% url 'budget' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'budget' %}active{% endif %}">
+                <i class="bi bi-bullseye"></i>
+                <span>بودجه</span>
+            </a>
+            <a href="{% url 'goals' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'goals' %}active{% endif %}">
+                <i class="bi bi-trophy"></i>
+                <span>اهداف</span>
+            </a>
+            <a href="{% url 'transactions' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'transactions' %}active{% endif %}">
+                <i class="bi bi-list-ul"></i>
+                <span>تراکنش</span>
+            </a>
+            <a href="{% url 'advisor' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'advisor' %}active{% endif %}">
+                <i class="bi bi-robot"></i>
+                <span>مشاور</span>
+            </a>
+            <a href="{% url 'profile' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="bi bi-person"></i>
+                <span>پروفایل</span>
+            </a>
+        </nav>
+    </div>
+    {% else %}
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

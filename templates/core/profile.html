@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load persian_tags %}
+
+{% block title %}پروفایل - کیف‌پول{% endblock %}
+
+{% block content %}
+<div class="profile-page animate-fade-in">
+    <!-- Profile Card -->
+    <div class="card mb-4">
+        <div class="card-body text-center py-4">
+            <form method="post" action="{% url 'update_profile' %}" enctype="multipart/form-data" id="avatarForm">
+                {% csrf_token %}
+                <div class="position-relative d-inline-block mb-3" style="cursor: pointer;"
+                    onclick="document.getElementById('avatarInput').click()">
+                    <div class="avatar-lg mx-auto">
+                        {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="Profile" class="rounded-circle"
+                            style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
+                            style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-fill fs-1"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 32px; height: 32px;">
+                        <i class="bi bi-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="avatarInput" name="avatar" class="d-none" accept="image/*"
+                    onchange="document.getElementById('avatarForm').submit()">
+            </form>
+            <h5 class="fw-bold mb-1">{{ user.first_name|default:user.username }}</h5>
+            <p class="text-muted small mb-0">کاربر کیف‌پول</p>
+        </div>
+    </div>
+
+    <!-- Theme Settings -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="fw-bold mb-3 pb-2 border-bottom">تنظیمات ظاهر</h6>
+
+            <label class="form-label small text-muted mb-3">رنگ پوسته</label>
+            <form method="post" action="{% url 'update_profile' %}" id="themeForm">
+                {% csrf_token %}
+                <input type="hidden" name="first_name" value="{{ user.first_name }}">
+                <div class="d-flex gap-3">
+                    <button type="submit" name="theme" value="olive"
+                        class="theme-btn {% if profile.theme == 'olive' %}active{% endif %}"
+                        style="background-color: #3f4f28;" title="زیتونی">
+                        {% if profile.theme == 'olive' %}<i class="bi bi-check text-white"></i>{% endif %}
+                    </button>
+                    <button type="submit" name="theme" value="blu"
+                        class="theme-btn {% if profile.theme == 'blu' %}active{% endif %}"
+                        style="background-color: #3b82f6;" title="آبی">
+                        {% if profile.theme == 'blu' %}<i class="bi bi-check text-white"></i>{% endif %}
+                    </button>
+                    <button type="submit" name="theme" value="berry"
+                        class="theme-btn {% if profile.theme == 'berry' %}active{% endif %}"
+                        style="background-color: #be123c;" title="تمشکی">
+                        {% if profile.theme == 'berry' %}<i class="bi bi-check text-white"></i>{% endif %}
+                    </button>
+                    <button type="submit" name="theme" value="dark"
+                        class="theme-btn {% if profile.theme == 'dark' %}active{% endif %}"
+                        style="background-color: #1c1917;" title="تیره">
+                        {% if profile.theme == 'dark' %}<i class="bi bi-check text-white"></i>{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="fw-bold mb-3 pb-2 border-bottom">ویرایش اطلاعات</h6>
+
+            <form method="post" action="{% url 'update_profile' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small text-muted d-flex align-items-center gap-1">
+                        <i class="bi bi-person"></i> نام نمایشی
+                    </label>
+                    <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                    <i class="bi bi-check-lg me-1"></i>
+                    ذخیره تغییرات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logout -->
+    <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100">
+        <i class="bi bi-box-arrow-right me-1"></i>
+        خروج از حساب
+    </a>
+</div>
+{% endblock %}

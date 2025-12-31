@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load persian_tags %}
+
+{% block title %}مشاور هوشمند - کیف‌پول{% endblock %}
+
+{% block content %}
+<div class="advisor-page d-flex flex-column" style="height: calc(100vh - 200px);">
+    <!-- Header Card -->
+    <div class="card bg-primary text-white mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="bg-white bg-opacity-25 p-2 rounded-3">
+                    <i class="bi bi-robot fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">مشاور هوشمند مالی</h5>
+                    <small class="opacity-75">قدرت گرفته از Dorna AI</small>
+                </div>
+            </div>
+            <p class="small opacity-75 mb-0">
+                سوالات پیچیده مالی خود را بپرسید. من برای تحلیل وضعیت شما و ارائه راهکار استفاده می‌کنم.
+            </p>
+        </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="flex-grow-1 overflow-auto mb-3" id="chatContainer">
+        <!-- Response will appear here -->
+        <div id="responseContainer" class="d-none">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 text-primary mb-2">
+                        <i class="bi bi-stars"></i>
+                        <span class="fw-bold small">پاسخ هوشمند</span>
+                    </div>
+                    <div id="responseText" class="text-muted"
+                        style="white-space: pre-line; text-align: justify; line-height: 1.8;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="d-none text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <div class="text-muted small">در حال تفکر عمیق روی سوال شما...</div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center text-muted py-5">
+            <p class="small">مثال: «با توجه به خریدهای اخیرم، چطور می‌توانم در ۳ ماه آینده ۵ میلیون تومان پس‌انداز کنم؟»
+            </p>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="mt-auto">
+        <form id="advisorForm" class="position-relative">
+            <textarea class="form-control pe-5" id="queryInput" rows="3" placeholder="سوال خود را اینجا بنویسید..."
+                style="resize: none; border-radius: 1.5rem;"></textarea>
+            <button type="submit" class="btn btn-primary position-absolute bottom-0 start-0 m-2 rounded-circle"
+                style="width: 40px; height: 40px;">
+                <i class="bi bi-send"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('advisorForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const query = document.getElementById('queryInput').value.trim();
+        if (!query) return;
+
+        const responseContainer = document.getElementById('responseContainer');
+        const responseText = document.getElementById('responseText');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+
+        // Show loading
+        emptyState.classList.add('d-none');
+        responseContainer.classList.add('d-none');
+        loadingState.classList.remove('d-none');
+
+        // Send request
+        fetch('{% url "advisor_ask" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ query: query })
+        })
+            .then(res => res.json())
+            .then(data => {
+                loadingState.classList.add('d-none');
+                responseText.textContent = data.response;
+                responseContainer.classList.remove('d-none');
+            })
+            .catch(() => {
+                loadingState.classList.add('d-none');
+                responseText.textContent = 'خطا در ارتباط با مشاور. لطفا مجددا تلاش کنید.';
+                responseContainer.classList.remove('d-none');
+            });
+    });
+</script>
+{% endblock %}

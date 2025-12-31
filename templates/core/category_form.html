@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - کیف‌پول{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-12 col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4">{{ title }}</h5>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small">نام دسته‌بندی</label>
+                        {{ form.name_fa }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">دسته والد (اختیاری)</label>
+                        {{ form.parent }}
+                        <div class="form-text">برای ایجاد زیرمجموعه، دسته والد را انتخاب کنید.</div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-8">
+                            <label class="form-label small">آیکون (Bootstrap Icons)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                {{ form.icon }}
+                            </div>
+                            <div class="form-text">
+                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">
+                                    مشاهده لیست آیکون‌ها
+                                    <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small">رنگ</label>
+                            {{ form.color }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'categories' %}" class="btn btn-light flex-fill">انصراف</a>
+                        <button type="submit" class="btn btn-primary flex-fill fw-bold">ذخیره</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

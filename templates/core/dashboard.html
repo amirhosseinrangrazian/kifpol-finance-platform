@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load persian_tags %}
+
+{% block title %}داشبورد - کیف‌پول{% endblock %}
+
+{% block content %}
+<div class="dashboard-page animate-fade-in">
+    <!-- Top Cards Row -->
+    <div class="row g-4 mb-4">
+        <!-- Balance Card -->
+        <div class="col-12 col-lg-4">
+            <div class="card balance-card text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 text-white-50 mb-2">
+                        <i class="bi bi-wallet2"></i>
+                        <span>موجودی کل</span>
+                    </div>
+                    <div class="balance-amount">
+                        {{ balance|format_amount }}
+                        <small class="text-white-50">تومان</small>
+                    </div>
+                    <button class="btn btn-light w-100 mt-3 fw-bold" data-bs-toggle="modal"
+                        data-bs-target="#addTransactionModal">
+                        <i class="bi bi-plus-lg me-1"></i>
+                        تراکنش جدید
+                    </button>
+                    <a href="{% url 'categories' %}" class="btn btn-outline-light w-100 mt-2 fw-bold border-opacity-25">
+                        <i class="bi bi-tags me-1"></i>
+                        مدیریت دسته‌بندی‌ها
+                    </a>
+                </div>
+                <div class="card-decoration"></div>
+            </div>
+        </div>
+
+        <!-- Income Card -->
+        <div class="col-6 col-lg-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 text-muted mb-2">
+                        <div class="icon-box bg-success-subtle text-success">
+                            <i class="bi bi-arrow-down-left"></i>
+                        </div>
+                        <span>درآمد ماه</span>
+                    </div>
+                    <div class="stat-amount text-success">
+                        {{ total_income|format_amount }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Card -->
+        <div class="col-6 col-lg-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 text-muted mb-2">
+                        <div class="icon-box bg-danger-subtle text-danger">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </div>
+                        <span>هزینه ماه</span>
+                    </div>
+                    <div class="stat-amount text-danger">
+                        {{ total_expense|format_amount }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-graph-up text-primary"></i>
+                        <h6 class="mb-0 fw-bold">روند موجودی</h6>
+                    </div>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Analysis & Ad -->
+    <div class="row g-4 mb-4">
+        <!-- AI Analysis -->
+        <div class="col-12 col-md-6">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 text-primary mb-2">
+                        <i class="bi bi-cpu"></i>
+                        <span class="fw-bold">تحلیل هوشمند</span>
+                    </div>
+                    <p class="text-muted mb-0 small" style="text-align: justify;">
+                        {{ analysis }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Targeted Ad -->
+        {% if targeted_ad %}
+        <div class="col-12 col-md-6">
+            <div class="card ad-card text-white"
+                style="background: linear-gradient(135deg, var(--bs-orange), var(--bs-red));">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="ad-icon">{{ targeted_ad.icon }}</span>
+                        <span class="badge bg-white bg-opacity-25">پیشنهاد</span>
+                    </div>
+                    <h6 class="fw-bold mb-1">{{ targeted_ad.title }}</h6>
+                    <p class="small opacity-75 mb-0">{{ targeted_ad.desc }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-clock-history me-1"></i>
+                    تراکنش‌های اخیر
+                </h6>
+                <a href="{% url 'transactions' %}" class="btn btn-sm btn-outline-primary">مشاهده همه</a>
+            </div>
+
+            {% if recent_transactions %}
+            <div class="transaction-list">
+                {% for t in recent_transactions %}
+                <div class="transaction-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <div
+                            class="transaction-icon {% if t.type == 'INCOME' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                            <i class="bi {{ t.category.icon }}"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ t.title }}</div>
+                            <small class="text-muted">{{ t.date }} | {{ t.category.name_fa }}</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold {% if t.type == 'INCOME' %}text-success{% else %}text-dark{% endif %}">
+                            {% if t.type == 'INCOME' %}+{% else %}-{% endif %}{{ t.amount|format_amount }}
+                        </div>
+                        <small class="text-muted">تومان</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox display-4 opacity-25"></i>
+                <p class="mt-2">هنوز تراکنشی ثبت نشده است</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">ثبت تراکنش جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'add_transaction' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- Type Toggle -->
+                    <div class="btn-group w-100 mb-3" role="group">
+                        <input type="radio" class="btn-check" name="type" id="typeExpense" value="EXPENSE" checked>
+                        <label class="btn btn-outline-danger" for="typeExpense">هزینه</label>
+
+                        <input type="radio" class="btn-check" name="type" id="typeIncome" value="INCOME">
+                        <label class="btn btn-outline-success" for="typeIncome">درآمد</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">مبلغ (تومان)</label>
+                        <input type="number" class="form-control form-control-lg" name="amount" required
+                            placeholder="50000">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">عنوان</label>
+                        <input type="text" class="form-control" name="title" required placeholder="مثلا: خرید نان">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">دسته‌بندی</label>
+                        <select class="form-select" name="category" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name_fa }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">تاریخ</label>
+                        <input type="text" class="form-control date-picker" name="date" required
+                            placeholder="1403/10/01" autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                        <i class="bi bi-check-lg me-1"></i>
+                        ثبت تراکنش
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $(".date-picker").pDatepicker({
+            format: 'YYYY/MM/DD',
+            initialValue: true,
+            autoClose: true,
+            calendar: {
+                persian: {
+                    locale: 'fa'
+                }
+            }
+        });
+    });
+
+    var chartData = {{ chart_data| safe }};
+    if (chartData && chartData.length > 0) {
+        var ctx = document.getElementById('balanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.map(function (_, i) { return i + 1; }),
+                datasets: [{
+                    data: chartData,
+                    borderColor: '#3f4f28',
+                    backgroundColor: 'rgba(63, 79, 40, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
