@@ -8,11 +8,19 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-kifpool-secret-key-change-in-production'
+# امنیت: مقادیر حساس از متغیرهای محیطی خوانده می‌شوند تا در کد ثابت نمانند.
+# برای توسعه‌ی محلی، در صورت نبود متغیر محیطی از مقدار پیش‌فرض استفاده می‌شود.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-kifpool-dev-only-change-me')
 
-DEBUG = True
+# DEBUG فقط زمانی روشن است که DJANGO_DEBUG برابر '1' یا 'true' باشد (پیش‌فرض: خاموش)
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['*']
+# میزبان‌های مجاز با کاما از متغیر محیطی خوانده می‌شوند (پیش‌فرض: لوکال)
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get(
+        'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1'
+    ).split(',') if h.strip()
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -86,8 +94,8 @@ LOGOUT_REDIRECT_URL = '/login/'
 LOGIN_URL = '/login/'
 
 # Local Llama AI Settings
-LLAMA_API_URL = 'http://localhost:8080/v1/chat/completions'
-LLAMA_API_SECRET = 'kifpool-secret'
+LLAMA_API_URL = os.environ.get('LLAMA_API_URL', 'http://localhost:8080/v1/chat/completions')
+LLAMA_API_SECRET = os.environ.get('LLAMA_API_SECRET', 'kifpool-secret')
 
 
 

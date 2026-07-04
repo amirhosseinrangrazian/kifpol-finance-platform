@@ -9,6 +9,11 @@ import csv
 import json
 from datetime import datetime
 
+try:
+    import jdatetime
+except ImportError:  # اگر jdatetime نصب نباشد، فیلتر ماه جاری غیرفعال می‌شود
+    jdatetime = None
+
 from .models import Transaction, Category, Budget, Goal, UserProfile
 from .forms import UserRegisterForm, TransactionForm, BudgetForm, GoalForm, ProfileForm, CategoryForm
 from .services.llama_service import get_financial_advice, analyze_spending, get_goal_advice
@@ -184,24 +189,42 @@ def import_transactions(request):
         try:
             decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
             reader = csv.DictReader(decoded_file)
-            
+
+            valid_types = {Transaction.INCOME, Transaction.EXPENSE}
             count = 0
+            skipped = 0
             for row in reader:
+                # اعتبارسنجی هر سطر؛ سطر نامعتبر رد می‌شود تا کل واردات متوقف نشود.
+                try:
+                    amount = Decimal(str(row.get('amount', '')).strip())
+                    if amount < 0:
+                        raise ValueError('amount is negative')
+                except (ValueError, ArithmeticError):
+                    skipped += 1
+                    continue
+
+                tx_type = (row.get('type') or '').strip().upper()
+                if tx_type not in valid_types:
+                    tx_type = Transaction.EXPENSE
+
                 category = Category.objects.filter(name=row.get('category', 'Other')).first()
                 if not category:
-                    category = Category.objects.get(name='Other')
-                
+                    category = Category.objects.filter(name='Other').first()
+
                 Transaction.objects.create(
                     user=request.user,
-                    title=row.get('title', 'Imported'),
-                    amount=Decimal(row.get('amount', 0)),
-                    type=row.get('type', Transaction.EXPENSE),
-                    date=row.get('date', ''),
+                    title=(row.get('title') or 'Imported').strip(),
+                    amount=amount,
+                    type=tx_type,
+                    date=(row.get('date') or '').strip(),
                     category=category
                 )
                 count += 1
-            
-            messages.success(request, f'{count} تراکنش با موفقیت وارد شد.')
+
+            if skipped:
+                messages.success(request, f'{count} تراکنش وارد شد. {skipped} سطر نامعتبر نادیده گرفته شد.')
+            else:
+                messages.success(request, f'{count} تراکنش با موفقیت وارد شد.')
         except Exception as e:
             messages.error(request, f'خطا در خواندن فایل: {str(e)}')
     
@@ -279,11 +302,14 @@ def budget(request):
     """Budget tracker view"""
     categories = Category.objects.filter(Q(is_default=True) | Q(user=request.user))
     budgets = Budget.objects.filter(user=request.user)
-    
-    # Calculate spending for current month
-    current_month = datetime.now().strftime('%Y/%m')  # Will need to convert to Jalali
+
+    # محاسبه‌ی هزینه‌ی ماه جاری (شمسی). تاریخ‌ها با قالب «1403/MM/DD» ذخیره می‌شوند،
+    # پس فقط تراکنش‌هایی که با پیشوند «سال/ماهِ» جاری شروع می‌شوند به حساب می‌آیند.
     transactions = Transaction.objects.filter(user=request.user, type=Transaction.EXPENSE)
-    
+    if jdatetime is not None:
+        current_month = jdatetime.date.today().strftime('%Y/%m')  # مثل 1403/10
+        transactions = transactions.filter(date__startswith=current_month)
+
     budget_data = []
     for category in categories:
         budget = budgets.filter(category=category).first()
